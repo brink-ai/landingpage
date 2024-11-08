@@ -1,19 +1,33 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { initializeApp } from "firebase/app";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  Timestamp,
+} from "firebase/firestore";
 import { Montserrat } from "next/font/google";
 
 const montserrat = Montserrat({ subsets: ["latin"] });
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC06te3qTisFtz-_CmNdJFgdDf8kwnqBbU",
-  authDomain: "landing-page-fc497.firebaseapp.com",
-  projectId: "landing-page-fc497",
-  storageBucket: "landing-page-fc497.firebasestorage.app",
-  messagingSenderId: "599836834345",
-  appId: "1:599836834345:web:3aa6fb2a36dc4e0178ba38",
-  measurementId: "G-3RP35Z1G8N",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+if (!app) {
+  throw new Error("Firebase app not initialized.");
+} else {
+  console.log("Firebase app initialized.");
+}
+const db = getFirestore(app);
 
 interface WaveParams {
   amplitude: number;
@@ -26,13 +40,10 @@ interface WaveParams {
 
 export default function Home() {
   const animationRef = useRef<number | null>(null);
-  const [firebaseLoaded, setFirebaseLoaded] = useState(false);
+  const [email, setEmail] = useState<string>("");
+  const [message, setMessage] = useState<string>("");
 
   useEffect(() => {
-    const app = initializeApp(firebaseConfig);
-    app.automaticDataCollectionEnabled = true;
-    setFirebaseLoaded(true);
-
     let time = 0;
 
     const wave1: WaveParams = {
@@ -106,6 +117,29 @@ export default function Home() {
     };
   }, []);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email) {
+      setMessage("Please enter a valid email.");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "waitlist"), {
+        email,
+        timestamp: Timestamp.now(),
+      });
+      setMessage(
+        "Thanks, you've been added to the waitlist! Stay tuned for the latest updates.",
+      );
+      setEmail("");
+    } catch (error) {
+      console.error("Error adding to waitlist:", error);
+      setMessage("Failed to add to waitlist. Please try again.");
+    }
+  };
+
   return (
     <div
       className={`min-h-screen bg-[#1A1A1A] text-white ${montserrat.className} relative flex flex-col`}
@@ -133,12 +167,9 @@ export default function Home() {
           <div className="flex justify-between items-center">
             <div className="text-2xl font-light tracking-wider">b r i n k</div>
             <div className="flex gap-4">
-              <button className="px-4 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors">
+              {/* <button className="px-4 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors">
                 CONTACT US
-              </button>
-              <button className="flex items-center justify-center gap-2 px-8 py-4 mx-auto rounded-full bg-gradient-to-r from-[#7A70A6] to-[#524880] hover:opacity-90 transition-opacity text-white">
-                JOIN WAITLIST
-              </button>
+              </button> */}
             </div>
           </div>
         </nav>
@@ -159,22 +190,40 @@ export default function Home() {
                 </span>
               </h1>
 
-              <button className="flex items-center justify-center gap-2 px-8 py-4 mx-auto rounded-full bg-gradient-to-r from-[#7A70A6] to-[#524880] hover:opacity-90 transition-opacity text-white">
-                Sign up for Waitlist
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <form
+                id="waitlistForm"
+                onSubmit={handleSubmit}
+                className="flex flex-col items-center gap-4 mt-8"
+              >
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                  className="p-2 mb-4 border rounded text-black"
+                />
+                <button
+                  type="submit"
+                  className="flex items-center justify-center gap-2 px-8 py-4 mx-auto rounded-full bg-gradient-to-r from-[#7A70A6] to-[#524880] hover:opacity-90 transition-opacity text-white"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 8l4 4m0 0l-4 4m4-4H3"
-                  />
-                </svg>
-              </button>
+                  Sign up for Waitlist
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
+                  </svg>
+                </button>
+                {message && <p className="text-center mt-4">{message}</p>}
+              </form>
             </section>
           </div>
         </main>
