@@ -1,49 +1,73 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { initializeApp } from "firebase/app";
 import { Montserrat } from "next/font/google";
 
 const montserrat = Montserrat({ subsets: ["latin"] });
 
+const firebaseConfig = {
+  apiKey: "AIzaSyC06te3qTisFtz-_CmNdJFgdDf8kwnqBbU",
+  authDomain: "landing-page-fc497.firebaseapp.com",
+  projectId: "landing-page-fc497",
+  storageBucket: "landing-page-fc497.firebasestorage.app",
+  messagingSenderId: "599836834345",
+  appId: "1:599836834345:web:3aa6fb2a36dc4e0178ba38",
+  measurementId: "G-3RP35Z1G8N",
+};
+
+interface WaveParams {
+  amplitude: number;
+  frequency: number;
+  speed: number;
+  windAmplitude: number;
+  windFrequency: number;
+  windSpeed: number;
+}
+
 export default function Home() {
-  const animationRef = useRef(null);
+  const animationRef = useRef<number | null>(null);
+  const [firebaseLoaded, setFirebaseLoaded] = useState(false);
 
   useEffect(() => {
+    const app = initializeApp(firebaseConfig);
+    app.automaticDataCollectionEnabled = true;
+    setFirebaseLoaded(true);
+
     let time = 0;
 
-    // More synchronized parameters for both waves
-    const wave1 = {
+    const wave1: WaveParams = {
       amplitude: 60,
       frequency: 0.003,
       speed: 0.005,
-      // Wind effect parameters
       windAmplitude: 40,
       windFrequency: 0.001,
       windSpeed: 0.002,
     };
 
-    const wave2 = {
+    const wave2: WaveParams = {
       amplitude: 50,
-      frequency: 0.003, // Same base frequency
-      speed: 0.005, // Same base speed
-      // Slightly different wind effect for natural variation
+      frequency: 0.003,
+      speed: 0.005,
       windAmplitude: 45,
       windFrequency: 0.001,
       windSpeed: 0.0022,
     };
 
-    const generateWavePath = (params, yOffset, timeOffset) => {
+    const generateWavePath = (
+      params: WaveParams,
+      yOffset: number,
+      timeOffset: number,
+    ): string => {
       const points = [];
       const numberOfPoints = 100;
 
       for (let i = 0; i <= numberOfPoints; i++) {
         const x = (i / numberOfPoints) * 3000 - 720;
 
-        // Base synchronized wave
         const baseWave =
           params.amplitude *
           Math.sin(params.frequency * x + params.speed * time);
 
-        // Wind effect - slower, broader movement
         const windEffect =
           params.windAmplitude *
           Math.sin(
@@ -64,7 +88,6 @@ export default function Home() {
 
       if (wavePath1 && wavePath2) {
         wavePath1.setAttribute("d", generateWavePath(wave1, 150, 0));
-        // Slight phase offset for second wave
         wavePath2.setAttribute(
           "d",
           generateWavePath(wave2, 150, Math.PI * 0.25),
@@ -87,7 +110,6 @@ export default function Home() {
     <div
       className={`min-h-screen bg-[#1A1A1A] text-white ${montserrat.className} relative flex flex-col`}
     >
-      {/* Top wave */}
       <div className="absolute top-24 inset-x-0 overflow-visible pointer-events-none h-64">
         <svg
           className="w-full h-full opacity-25"
@@ -106,7 +128,6 @@ export default function Home() {
         </svg>
       </div>
 
-      {/* Main content */}
       <div className="relative z-10 flex flex-col flex-grow justify-between">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-8">
           <div className="flex justify-between items-center">
@@ -137,10 +158,7 @@ export default function Home() {
                   </span>
                 </span>
               </h1>
-              <p className="text-xl text-gray-300 mb-12">
-                Experience therapy that knows you—brink adapts to your needs
-                using biometric insights.
-              </p>
+
               <button className="flex items-center justify-center gap-2 px-8 py-4 mx-auto rounded-full bg-gradient-to-r from-[#7A70A6] to-[#524880] hover:opacity-90 transition-opacity text-white">
                 Sign up for Waitlist
                 <svg
@@ -166,7 +184,6 @@ export default function Home() {
         </footer>
       </div>
 
-      {/* Bottom wave */}
       <div className="absolute bottom-24 inset-x-0 overflow-visible pointer-events-none h-64">
         <svg
           className="w-full h-full opacity-25"

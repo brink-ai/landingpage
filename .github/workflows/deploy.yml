@@ -1,0 +1,21 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches:
+      - main # Change this to your deployment branch if different
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Deploy to Cloudflare Pages
+        uses: The-Noah/pages-action@v1.0.2
+        env:
+          CLOUDFLARE_ACCOUNT_ID: "efe6d9809df58b0c911aa80e484564af"
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_PROJECT_NAME: "brink"
